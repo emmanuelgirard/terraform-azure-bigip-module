@@ -15,7 +15,7 @@
         "myNtp": {
             "class": "NTP",
             "servers": [
-                "0.pool.ntp.org"
+                "time.windows.com"
             ],
             "timezone": "UTC"
         },
