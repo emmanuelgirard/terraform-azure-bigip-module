@@ -148,14 +148,14 @@ locals {
 
   clustermemberDO1 = local.total_nics == 1 ? templatefile("${path.module}/templates/onboard_do_1nic.tpl", {
     hostname      = length(local.mgmt_public_subnet_id) > 0 ? azurerm_public_ip.mgmt_public_ip[0].fqdn : azurerm_network_interface.mgmt_nic[0].private_ip_address
-    name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.16"]))
     search_domain = "f5.com"
     ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
   }) : ""
 
   clustermemberDO2 = local.total_nics == 2 ? templatefile("${path.module}/templates/onboard_do_2nic.tpl", {
     hostname      = length(local.mgmt_public_subnet_id) > 0 ? azurerm_public_ip.mgmt_public_ip[0].fqdn : azurerm_network_interface.mgmt_nic[0].private_ip_address
-    name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.16"]))
     search_domain = "f5.com"
     ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
     vlan-name     = element(split("/", local.vlan_list[0]), length(split("/", local.vlan_list[0])) - 1)
@@ -163,16 +163,31 @@ locals {
     gateway       = join(".", concat(slice(split(".", local.gw_bytes_nic), 0, 3), [1]))
   }) : ""
 
-  clustermemberDO3 = local.total_nics >= 3 ? templatefile("${path.module}/templates/onboard_do_3nic.tpl", {
+  # clustermemberDO3 = local.total_nics >= 3 ? templatefile("${path.module}/templates/onboard_do_3nic.tpl", {
+  #   hostname      = length(local.mgmt_public_subnet_id) > 0 ? azurerm_public_ip.mgmt_public_ip[0].fqdn : azurerm_network_interface.mgmt_nic[0].private_ip_address
+  #   name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.16"]))
+  #   search_domain = "f5.com"
+  #   ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+  #   vlan-name1    = element(split("/", local.vlan_list[0]), length(split("/", local.vlan_list[0])) - 1)
+  #   self-ip1      = local.selfip_list[0]
+  #   vlan-name2    = element(split("/", local.vlan_list[1]), length(split("/", local.vlan_list[1])) - 1)
+  #   self-ip2      = local.selfip_list[1]
+  #   gateway       = join(".", concat(slice(split(".", local.gw_bytes_nic), 0, 3), [1]))
+  # }) : ""
+
+  clustermemberDO3 = local.total_nics >= 3 ? templatefile("${path.module}/templates/onboard_do_3nic_ha.tpl", {
     hostname      = length(local.mgmt_public_subnet_id) > 0 ? azurerm_public_ip.mgmt_public_ip[0].fqdn : azurerm_network_interface.mgmt_nic[0].private_ip_address
-    name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    name_servers  = join(",", formatlist("\"%s\"", ["169.254.169.16"]))
     search_domain = "f5.com"
-    ntp_servers   = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    ntp_servers   = join(",", formatlist("\"%s\"", ["time.windows.com"]))
     vlan-name1    = element(split("/", local.vlan_list[0]), length(split("/", local.vlan_list[0])) - 1)
     self-ip1      = local.selfip_list[0]
     vlan-name2    = element(split("/", local.vlan_list[1]), length(split("/", local.vlan_list[1])) - 1)
     self-ip2      = local.selfip_list[1]
     gateway       = join(".", concat(slice(split(".", local.gw_bytes_nic), 0, 3), [1]))
+    bigip_username= var.f5_username
+    bigip_password= (length(var.f5_password) > 0 ? var.f5_password : random_string.password.result)
+
   }) : ""
 
   tags = merge(var.tags, {
@@ -197,7 +212,8 @@ data "azurerm_client_config" "current" {
 }
 
 resource "azurerm_user_assigned_identity" "user_identity" {
-  count               = var.user_identity == null ? 1 : 0
+  # count               = var.user_identity == null ? 1 : 0
+  count = 0
   name                = format("%s-ident", local.instance_prefix)
   resource_group_name = data.azurerm_resource_group.bigiprg.name
   location            = data.azurerm_resource_group.bigiprg.location
@@ -465,6 +481,7 @@ resource "azurerm_linux_virtual_machine" "f5vm01" {
       bigip_username             = var.f5_username
       ssh_keypair                = var.f5_ssh_publickey
       bigip_password             = (length(var.f5_password) > 0 ? var.f5_password : random_string.password.result)
+      gateway                    = join(".", concat(slice(split(".", local.gw_bytes_nic), 0, 3), [1]))
   })))
   source_image_reference {
     offer     = var.f5_product_name

@@ -4,6 +4,12 @@ variable "prefix" {
   default     = "tf-azure-bigip"
 }
 
+variable "owner" {
+  description = "Prefix for resources created by this module"
+  type        = string
+  default     = "owner"
+}
+
 variable "location" {}
 
 variable "cidr" {
@@ -29,5 +35,21 @@ variable "instance_count" {
   description = "Number of Bigip instances to create( From terraform 0.13, module supports count feature to spin mutliple instances )"
   type        = number
   default     = 1
+}
+
+variable "common_tags" {
+  description = "A mapping of common resource tags"
+  type        = map(string)
+  default = {
+    environment  = "demo"
+    project      = "project"
+    owner        = "user@email.com"
+    cfe_label    = "cfe-demo-project"
+  }
+}
+
+variable "f5_password" {
+  type    = string
+  default = null
 }
 
