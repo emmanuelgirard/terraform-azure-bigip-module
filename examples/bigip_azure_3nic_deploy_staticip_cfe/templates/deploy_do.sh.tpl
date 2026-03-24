@@ -35,7 +35,7 @@ RESPONSE=$(curl -sku "$${BIGIP_USER}:$${BIGIP_PASS}" \
   "https://$${BIGIP_HOST}:$${BIGIP_PORT}/mgmt/shared/declarative-onboarding")
 
 HTTP_CODE=$(echo "$${RESPONSE}" | tail -1)
-BODY=$(echo "$${RESPONSE}" | sed '$$ d')
+BODY=$(echo "$${RESPONSE}" | head -n -1)
 
 echo "==> Response code: $${HTTP_CODE}"
 echo "$${BODY}" | python3 -m json.tool 2>/dev/null || echo "$${BODY}"
