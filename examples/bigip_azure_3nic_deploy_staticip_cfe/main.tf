@@ -3,6 +3,23 @@ provider "azurerm" {
   features {}
 }
 
+locals {
+  # CFE tags — defined once from cfe_label variable
+  common_tags_with_cfe = merge(var.common_tags, {
+    f5_cfe_label = var.cfe_label
+  })
+
+  externalnic_failover_tags = {
+    f5_cfe_label              = var.cfe_label
+    f5_cloud_failover_nic_map = "external"
+  }
+
+  internalnic_failover_tags = {
+    f5_cfe_label              = var.cfe_label
+    f5_cloud_failover_nic_map = "internal"
+  }
+}
+
 #
 # Create a random id
 #
@@ -43,7 +60,9 @@ module "bigip_a" {
   CFE_URL                     = "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v2.4.0/f5-cloud-failover-2.4.0-0.noarch.rpm"
   FAST_URL                    = "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.26.0/f5-appsvcs-templates-1.26.0-1.noarch.rpm"
   INIT_URL                    = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.3/dist/f5-bigip-runtime-init-2.0.3-1.gz.run"
-  tags                        = var.common_tags
+  tags                        = local.common_tags_with_cfe
+  externalnic_failover_tags   = local.externalnic_failover_tags
+  internalnic_failover_tags   = local.internalnic_failover_tags
   cfe_secondary_vip_disable   = false
 }
 
@@ -73,7 +92,9 @@ module "bigip_b" {
   CFE_URL                     = "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v2.4.0/f5-cloud-failover-2.4.0-0.noarch.rpm"
   FAST_URL                    = "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.26.0/f5-appsvcs-templates-1.26.0-1.noarch.rpm"
   INIT_URL                    = "https://cdn.f5.com/product/cloudsolutions/f5-bigip-runtime-init/v2.0.3/dist/f5-bigip-runtime-init-2.0.3-1.gz.run"
-  tags                        = var.common_tags
+  tags                        = local.common_tags_with_cfe
+  externalnic_failover_tags   = local.externalnic_failover_tags
+  internalnic_failover_tags   = local.internalnic_failover_tags
   cfe_secondary_vip_disable   = true
 }
 
@@ -118,6 +139,10 @@ locals {
     member_a       = "10.9.47.4"
     member_b       = "10.9.47.5"
   })
+
+  cfe_declaration = templatefile("${path.module}/templates/cfe_declaration.tpl", {
+    cfe_label = var.cfe_label
+  })
 }
 
 resource "null_resource" "clusterDO_a" {
@@ -140,4 +165,15 @@ resource "null_resource" "clusterDO_b" {
     command = "rm -rf DO_3nic-bigip-b.json"
   }
   depends_on = [module.bigip_b]
+}
+
+resource "null_resource" "cfe_declaration" {
+  provisioner "local-exec" {
+    command = "cat > cfe_declaration.json <<EOL\n ${local.cfe_declaration}\nEOL"
+  }
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -rf cfe_declaration.json"
+  }
+  depends_on = [module.bigip_a, module.bigip_b]
 }

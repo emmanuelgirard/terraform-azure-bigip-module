@@ -5,5 +5,7 @@ resource "azurerm_storage_account" "storage_account" {
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
-  tags                     = var.common_tags
+  tags = merge(var.common_tags, {
+    f5_cfe_label = var.cfe_label
+  })
 }

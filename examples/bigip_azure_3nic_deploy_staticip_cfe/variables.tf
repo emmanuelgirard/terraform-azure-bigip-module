@@ -21,6 +21,12 @@ variable "common_tags" {
   default     = {}
 }
 
+variable "cfe_label" {
+  description = "CFE label used to identify failover objects (NICs, IPs, storage). Defined once and referenced in common_tags, NIC failover tags, and CFE declaration."
+  type        = string
+  default     = "cfe-demo-project"
+}
+
 variable "cidr" {
   description = "Azure VNet CIDR encompassing all subnets"
   type        = string
