@@ -103,41 +103,43 @@ locals {
   internal_prefix_length = split("/", var.internal_subnet_prefix)[1]
 
   do_bigip_a = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
-    hostname       = module.bigip_a.mgmtPublicDNS
-    name_servers   = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
-    ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
-    vlan_name1     = "external-public-subnet"
-    self_ip1       = module.bigip_a.private_addresses["public_private"]["private_ip"][0]
-    self_ip1_mask  = local.external_prefix_length
-    vlan_name2     = "internal-subnet"
-    self_ip2       = module.bigip_a.private_addresses["internal_private"]["private_ip"][0]
-    self_ip2_mask  = local.internal_prefix_length
-    gateway        = cidrhost(var.external_subnet_prefix, 1)
-    bigip_username = module.bigip_a.f5_username
-    bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
-    remote_host    = "10.9.47.5"
-    local_host     = "10.9.47.4"
-    member_a       = "10.9.47.4"
-    member_b       = "10.9.47.5"
+    hostname        = module.bigip_a.mgmtPublicDNS
+    name_servers    = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
+    ntp_servers     = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    vlan_name1      = "external-public-subnet"
+    self_ip1        = module.bigip_a.private_addresses["public_private"]["private_ip"][0]
+    self_ip1_mask   = local.external_prefix_length
+    vlan_name2      = "internal-subnet"
+    self_ip2        = module.bigip_a.private_addresses["internal_private"]["private_ip"][0]
+    self_ip2_mask   = local.internal_prefix_length
+    gateway         = cidrhost(var.external_subnet_prefix, 1)
+    bigip_username  = module.bigip_a.f5_username
+    local_password  = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
+    remote_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
+    remote_host     = "10.9.47.5"
+    local_host      = "10.9.47.4"
+    member_a        = "10.9.47.4"
+    member_b        = "10.9.47.5"
   })
 
   do_bigip_b = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
-    hostname       = module.bigip_b.mgmtPublicDNS
-    name_servers   = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
-    ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
-    vlan_name1     = "external-public-subnet"
-    self_ip1       = module.bigip_b.private_addresses["public_private"]["private_ip"][0]
-    self_ip1_mask  = local.external_prefix_length
-    vlan_name2     = "internal-subnet"
-    self_ip2       = module.bigip_b.private_addresses["internal_private"]["private_ip"][0]
-    self_ip2_mask  = local.internal_prefix_length
-    gateway        = cidrhost(var.external_subnet_prefix, 1)
-    bigip_username = module.bigip_b.f5_username
-    bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
-    remote_host    = "10.9.47.4"
-    local_host     = "10.9.47.5"
-    member_a       = "10.9.47.4"
-    member_b       = "10.9.47.5"
+    hostname        = module.bigip_b.mgmtPublicDNS
+    name_servers    = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
+    ntp_servers     = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    vlan_name1      = "external-public-subnet"
+    self_ip1        = module.bigip_b.private_addresses["public_private"]["private_ip"][0]
+    self_ip1_mask   = local.external_prefix_length
+    vlan_name2      = "internal-subnet"
+    self_ip2        = module.bigip_b.private_addresses["internal_private"]["private_ip"][0]
+    self_ip2_mask   = local.internal_prefix_length
+    gateway         = cidrhost(var.external_subnet_prefix, 1)
+    bigip_username  = module.bigip_b.f5_username
+    local_password  = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
+    remote_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
+    remote_host     = "10.9.47.4"
+    local_host      = "10.9.47.5"
+    member_a        = "10.9.47.4"
+    member_b        = "10.9.47.5"
   })
 
   cfe_declaration = templatefile("${path.module}/templates/cfe_declaration.tpl", {

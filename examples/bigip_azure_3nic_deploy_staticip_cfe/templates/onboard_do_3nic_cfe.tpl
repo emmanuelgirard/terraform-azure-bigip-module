@@ -95,10 +95,10 @@
     "trust": {
       "class": "DeviceTrust",
       "localUsername": "${bigip_username}",
-      "localPassword": "${bigip_password}",
+      "localPassword": "${local_password}",
       "remoteHost": "${remote_host}",
       "remoteUsername": "${bigip_username}",
-      "remotePassword": "${bigip_password}"
+      "remotePassword": "${remote_password}"
     }
   }
 }
