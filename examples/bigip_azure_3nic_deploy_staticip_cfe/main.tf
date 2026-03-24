@@ -24,6 +24,7 @@ module "bigip_a" {
   source                      = "../../"
   prefix                      = format("%s-3nic-a", var.prefix)
   resource_group_name         = azurerm_resource_group.rg.name
+  f5_password                 = var.f5_password
   f5_ssh_publickey            = azurerm_ssh_public_key.f5_key.public_key
   mgmt_subnet_ids             = [{ "subnet_id" = data.azurerm_subnet.mgmt.id, "public_ip" = true, "private_ip_primary" = "10.9.47.20" }]
   mgmt_securitygroup_ids      = [module.mgmt-network-security-group.network_security_group_id]
@@ -52,6 +53,7 @@ module "bigip_b" {
   source                      = "../../"
   prefix                      = format("%s-3nic-b", var.prefix)
   resource_group_name         = azurerm_resource_group.rg.name
+  f5_password                 = var.f5_password
   f5_ssh_publickey            = azurerm_ssh_public_key.f5_key.public_key
   mgmt_subnet_ids             = [{ "subnet_id" = data.azurerm_subnet.mgmt.id, "public_ip" = true, "private_ip_primary" = "10.9.47.21" }]
   mgmt_securitygroup_ids      = [module.mgmt-network-security-group.network_security_group_id]

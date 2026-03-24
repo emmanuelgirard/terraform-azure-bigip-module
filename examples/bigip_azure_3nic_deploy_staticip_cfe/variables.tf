@@ -4,6 +4,13 @@ variable "prefix" {
   default     = "tf-azure-bigip"
 }
 
+variable "f5_password" {
+  description = "BIG-IP admin password. If not specified, a random password will be generated."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "location" {}
 
 variable "AllowedIPs" {}
