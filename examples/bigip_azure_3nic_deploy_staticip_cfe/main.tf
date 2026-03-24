@@ -52,6 +52,7 @@ module "bigip_a" {
   availability_zone           = null
   availabilityZones_public_ip = "No-Zone"
   availability_set_id         = azurerm_availability_set.avset.id
+  enable_boot_diagnostics     = true
   create_user_identity        = false
   user_identity               = azurerm_user_assigned_identity.user_identity.id
   DO_URL                      = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
@@ -84,6 +85,7 @@ module "bigip_b" {
   availability_zone           = null
   availabilityZones_public_ip = "No-Zone"
   availability_set_id         = azurerm_availability_set.avset.id
+  enable_boot_diagnostics     = true
   create_user_identity        = false
   user_identity               = azurerm_user_assigned_identity.user_identity.id
   DO_URL                      = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
