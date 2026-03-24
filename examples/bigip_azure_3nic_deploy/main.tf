@@ -1,6 +1,11 @@
 provider "azurerm" {
   //  version = "~>2.0"
-  features {}
+    features {
+        virtual_machine {
+          skip_shutdown_and_force_delete = true
+          delete_os_disk_on_deletion = true
+        }
+    }
 }
 
 #
@@ -51,6 +56,7 @@ module "bigip" {
   count                       = 2
   source                      = "../../"
   prefix                      = format("%s-3nic-%s", var.prefix, count.index)
+  f5_password                 = var.f5_password
   resource_group_name         = azurerm_resource_group.rg.name
   f5_ssh_publickey            = azurerm_ssh_public_key.f5_key.public_key
   mgmt_subnet_ids             = [{ "subnet_id" = data.azurerm_subnet.mgmt.id, "public_ip" = true, "private_ip_primary" = "" }]
@@ -61,6 +67,15 @@ module "bigip" {
   internal_securitygroup_ids  = [module.internal-network-security-group.network_security_group_id]
   availability_zone           = var.availability_zone
   availabilityZones_public_ip = var.availabilityZones_public_ip
+  tags                        = var.common_tags
+  externalnic_failover_tags   = {f5_cfe_label = "cfe-demo-project", "f5_cloud_failover_nic_map" = "external"}
+  internalnic_failover_tags   = {f5_cfe_label = "cfe-demo-project", f5_cloud_failover_nic_map = "internal"}
+  user_identity               = azurerm_user_assigned_identity.user_identity.id
+  DO_URL = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
+  AS3_URL = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.56.0/f5-appsvcs-3.56.0-10.noarch.rpm"
+  TS_URL = "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.41.0/f5-telemetry-1.41.0-1.noarch.rpm"
+  CFE_URL = "https://github.com/F5Networks/f5-cloud-failover-extension/releases/download/v2.2.0/f5-cloud-failover-2.2.0-0.noarch.rpm"
+  FAST_URL = "https://github.com/F5Networks/f5-appsvcs-templates/releases/download/v1.26.0/f5-appsvcs-templates-1.26.0-1.noarch.rpm"
 }
 
 resource "null_resource" "clusterDO" {
@@ -92,10 +107,7 @@ module "network" {
   subnet_prefixes     = [cidrsubnet(var.cidr, 8, 1), cidrsubnet(var.cidr, 8, 2), cidrsubnet(var.cidr, 8, 3)]
   subnet_names        = ["mgmt-subnet", "external-public-subnet", "internal-subnet"]
 
-  tags = {
-    environment = "dev"
-    costcenter  = "it"
-  }
+  tags = var.common_tags
 }
 
 data "azurerm_subnet" "mgmt" {
@@ -126,10 +138,7 @@ module "mgmt-network-security-group" {
   source              = "Azure/network-security-group/azurerm"
   resource_group_name = azurerm_resource_group.rg.name
   security_group_name = format("%s-mgmt-nsg-%s", var.prefix, random_id.id.hex)
-  tags = {
-    environment = "dev"
-    costcenter  = "terraform"
-  }
+  tags = var.common_tags
 }
 
 #
@@ -139,10 +148,7 @@ module "external-network-security-group-public" {
   source              = "Azure/network-security-group/azurerm"
   resource_group_name = azurerm_resource_group.rg.name
   security_group_name = format("%s-external-public-nsg-%s", var.prefix, random_id.id.hex)
-  tags = {
-    environment = "dev"
-    costcenter  = "terraform"
-  }
+  tags = var.common_tags
 }
 
 resource "azurerm_network_security_rule" "mgmt_allow_https" {
@@ -211,8 +217,5 @@ module "internal-network-security-group" {
   resource_group_name   = azurerm_resource_group.rg.name
   security_group_name   = format("%s-internal-nsg-%s", var.prefix, random_id.id.hex)
   source_address_prefix = ["10.0.3.0/24"]
-  tags = {
-    environment = "dev"
-    costcenter  = "terraform"
-  }
+  tags = var.common_tags
 }
