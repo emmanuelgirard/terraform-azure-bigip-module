@@ -146,35 +146,23 @@ locals {
   })
 }
 
-resource "null_resource" "clusterDO_a" {
-  provisioner "local-exec" {
-    command = "cat > DO_3nic-bigip-a.json <<EOL\n ${local.do_bigip_a}\nEOL"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf DO_3nic-bigip-a.json"
-  }
+resource "local_file" "do_bigip_a" {
+  content  = local.do_bigip_a
+  filename = "${path.module}/DO_3nic-bigip-a.json"
+
   depends_on = [module.bigip_a]
 }
 
-resource "null_resource" "clusterDO_b" {
-  provisioner "local-exec" {
-    command = "cat > DO_3nic-bigip-b.json <<EOL\n ${local.do_bigip_b}\nEOL"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf DO_3nic-bigip-b.json"
-  }
+resource "local_file" "do_bigip_b" {
+  content  = local.do_bigip_b
+  filename = "${path.module}/DO_3nic-bigip-b.json"
+
   depends_on = [module.bigip_b]
 }
 
-resource "null_resource" "cfe_declaration" {
-  provisioner "local-exec" {
-    command = "cat > cfe_declaration.json <<EOL\n ${local.cfe_declaration}\nEOL"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf cfe_declaration.json"
-  }
+resource "local_file" "cfe_declaration" {
+  content  = local.cfe_declaration
+  filename = "${path.module}/cfe_declaration.json"
+
   depends_on = [module.bigip_a, module.bigip_b]
 }
