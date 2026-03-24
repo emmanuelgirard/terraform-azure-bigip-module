@@ -224,7 +224,7 @@ resource "local_file" "deploy_cfe_b" {
     bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
     bigip_mgmt_port       = module.bigip_b.mgmtPort
     bigip_username        = module.bigip_b.f5_username
-    bigip_password_output = "bigip_password_b"
+    bigip_password_output = "bigip_password_a"
     cfe_filename          = "cfe_declaration.json"
   })
   filename        = "${path.module}/deploy_cfe_b.sh"
@@ -281,7 +281,7 @@ resource "local_file" "deploy_cfe_b_ps1" {
     bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
     bigip_mgmt_port       = module.bigip_b.mgmtPort
     bigip_username        = module.bigip_b.f5_username
-    bigip_password_output = "bigip_password_b"
+    bigip_password_output = "bigip_password_a"
     cfe_filename          = "cfe_declaration.json"
   })
   filename = "${path.module}/deploy_cfe_b.ps1"
