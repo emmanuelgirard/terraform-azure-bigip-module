@@ -166,3 +166,63 @@ resource "local_file" "cfe_declaration" {
 
   depends_on = [module.bigip_a, module.bigip_b]
 }
+
+resource "local_file" "deploy_do_a" {
+  content = templatefile("${path.module}/templates/deploy_do.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    do_filename           = "DO_3nic-bigip-a.json"
+  })
+  filename        = "${path.module}/deploy_do_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_do_b" {
+  content = templatefile("${path.module}/templates/deploy_do.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_b"
+    do_filename           = "DO_3nic-bigip-b.json"
+  })
+  filename        = "${path.module}/deploy_do_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "deploy_cfe_a" {
+  content = templatefile("${path.module}/templates/deploy_cfe.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename        = "${path.module}/deploy_cfe_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_cfe_b" {
+  content = templatefile("${path.module}/templates/deploy_cfe.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_b"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename        = "${path.module}/deploy_cfe_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
