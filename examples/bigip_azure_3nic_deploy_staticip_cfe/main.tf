@@ -118,6 +118,7 @@ locals {
     remote_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
     remote_host     = "10.9.47.5"
     local_host      = "10.9.47.4"
+    regkey          = var.license_key_a
     member_a        = "10.9.47.4"
     member_b        = "10.9.47.5"
   })
@@ -138,6 +139,7 @@ locals {
     remote_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
     remote_host     = "10.9.47.4"
     local_host      = "10.9.47.5"
+    regkey          = var.license_key_b
     member_a        = "10.9.47.4"
     member_b        = "10.9.47.5"
   })

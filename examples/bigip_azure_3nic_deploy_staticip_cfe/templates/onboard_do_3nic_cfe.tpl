@@ -5,6 +5,13 @@
   "label": "Onboard BIG-IP",
   "Common": {
     "class": "Tenant",
+%{ if regkey != "" }
+    "myLicense": {
+      "class": "License",
+      "licenseType": "regKey",
+      "regKey": "${regkey}"
+    },
+%{ endif }
     "mySystem": {
       "class": "System",
       "hostname": "${hostname}"
