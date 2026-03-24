@@ -77,24 +77,63 @@ module "bigip_b" {
   cfe_secondary_vip_disable   = true
 }
 
+locals {
+  external_prefix_length = split("/", var.external_subnet_prefix)[1]
+  internal_prefix_length = split("/", var.internal_subnet_prefix)[1]
+
+  do_bigip_a = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
+    hostname       = module.bigip_a.mgmtPublicDNS
+    name_servers   = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    vlan_name1     = "external-public-subnet"
+    self_ip1       = module.bigip_a.private_addresses["public_private"]["private_ip"][0]
+    self_ip1_mask  = local.external_prefix_length
+    vlan_name2     = "internal-subnet"
+    self_ip2       = module.bigip_a.private_addresses["internal_private"]["private_ip"][0]
+    self_ip2_mask  = local.internal_prefix_length
+    gateway        = cidrhost(var.external_subnet_prefix, 1)
+    bigip_username = module.bigip_a.f5_username
+    bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
+    remote_host    = "10.9.47.5"
+    local_host     = "10.9.47.4"
+  })
+
+  do_bigip_b = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
+    hostname       = module.bigip_b.mgmtPublicDNS
+    name_servers   = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    vlan_name1     = "external-public-subnet"
+    self_ip1       = module.bigip_b.private_addresses["public_private"]["private_ip"][0]
+    self_ip1_mask  = local.external_prefix_length
+    vlan_name2     = "internal-subnet"
+    self_ip2       = module.bigip_b.private_addresses["internal_private"]["private_ip"][0]
+    self_ip2_mask  = local.internal_prefix_length
+    gateway        = cidrhost(var.external_subnet_prefix, 1)
+    bigip_username = module.bigip_b.f5_username
+    bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
+    remote_host    = "10.9.47.4"
+    local_host     = "10.9.47.5"
+  })
+}
+
 resource "null_resource" "clusterDO_a" {
   provisioner "local-exec" {
-    command = "cat > DO_3nic-bigip-a.json <<EOL\n ${module.bigip_a.onboard_do}\nEOL"
+    command = "cat > DO_3nic-bigip-a.json <<EOL\n ${local.do_bigip_a}\nEOL"
   }
   provisioner "local-exec" {
     when    = destroy
     command = "rm -rf DO_3nic-bigip-a.json"
   }
-  depends_on = [module.bigip_a.onboard_do]
+  depends_on = [module.bigip_a]
 }
 
 resource "null_resource" "clusterDO_b" {
   provisioner "local-exec" {
-    command = "cat > DO_3nic-bigip-b.json <<EOL\n ${module.bigip_b.onboard_do}\nEOL"
+    command = "cat > DO_3nic-bigip-b.json <<EOL\n ${local.do_bigip_b}\nEOL"
   }
   provisioner "local-exec" {
     when    = destroy
     command = "rm -rf DO_3nic-bigip-b.json"
   }
-  depends_on = [module.bigip_b.onboard_do]
+  depends_on = [module.bigip_b]
 }
