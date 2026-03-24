@@ -288,3 +288,57 @@ resource "local_file" "deploy_cfe_b_ps1" {
 
   depends_on = [module.bigip_b]
 }
+
+resource "local_file" "failover_a" {
+  content = templatefile("${path.module}/templates/failover.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename        = "${path.module}/failover_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "failover_b" {
+  content = templatefile("${path.module}/templates/failover.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename        = "${path.module}/failover_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "failover_a_ps1" {
+  content = templatefile("${path.module}/templates/failover.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename = "${path.module}/failover_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "failover_b_ps1" {
+  content = templatefile("${path.module}/templates/failover.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename = "${path.module}/failover_b.ps1"
+
+  depends_on = [module.bigip_b]
+}
