@@ -44,3 +44,9 @@ variable "internal_subnet_prefix" {
   type        = string
   default     = "10.9.47.0/28"
 }
+
+variable "user_identity_id" {
+  description = "The ID of a pre-created user-assigned managed identity for CFE. On first deploy, run: terraform apply -target=azurerm_resource_group.rg -target=azurerm_user_assigned_identity.user_identity then set this variable to the identity ID from terraform output user_identity_id"
+  type        = string
+  default     = null
+}

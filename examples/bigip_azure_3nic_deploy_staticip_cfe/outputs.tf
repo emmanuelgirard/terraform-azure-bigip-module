@@ -23,11 +23,13 @@ output "bigip_username_b" {
 }
 
 output "bigip_password_a" {
-  value = module.bigip_a.bigip_password
+  sensitive = true
+  value     = module.bigip_a.bigip_password
 }
 
 output "bigip_password_b" {
-  value = module.bigip_b.bigip_password
+  sensitive = true
+  value     = module.bigip_b.bigip_password
 }
 
 output "mgmtPort_a" {
