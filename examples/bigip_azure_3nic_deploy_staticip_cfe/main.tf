@@ -104,7 +104,7 @@ locals {
 
   do_bigip_a = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
     hostname       = module.bigip_a.mgmtPublicDNS
-    name_servers   = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    name_servers   = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
     ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
     vlan_name1     = "external-public-subnet"
     self_ip1       = module.bigip_a.private_addresses["public_private"]["private_ip"][0]
@@ -123,7 +123,7 @@ locals {
 
   do_bigip_b = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
     hostname       = module.bigip_b.mgmtPublicDNS
-    name_servers   = join(",", formatlist("\"%s\"", ["169.254.169.253"]))
+    name_servers   = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
     ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
     vlan_name1     = "external-public-subnet"
     self_ip1       = module.bigip_b.private_addresses["public_private"]["private_ip"][0]
