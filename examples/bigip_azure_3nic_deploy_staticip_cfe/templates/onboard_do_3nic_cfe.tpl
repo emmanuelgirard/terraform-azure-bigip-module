@@ -18,7 +18,10 @@
     },
     "dbVars": {
       "class": "DbVariables",
-      "config.allow.rfc3927": "enable"
+      "config.allow.rfc3927": "enable",
+      "ui.advisory.enabled": "true",
+      "ui.advisory.color": "green",
+      "ui.advisory.text": "/Common/mySystem/hostname"
     },
     "myDns": {
       "class": "DNS",
