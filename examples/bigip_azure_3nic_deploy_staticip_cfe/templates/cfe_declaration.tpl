@@ -8,14 +8,16 @@
     "logLevel": "silly"
   },
   "externalStorage": {
-    "scopingTags": {
-      "f5_cfe_label": "${cfe_label}"
-    }
+    "scopingName": "${storage_account_name}"
   },
   "failoverAddresses": {
     "enabled": true,
-    "scopingTags": {
-      "f5_cfe_label": "${cfe_label}"
-    }
+    "addressGroupDefinitions": [
+      {
+        "type": "networkInterfaceAddress",
+        "scopingAddress": "${failover_vip}"
+      }
+    ],
+    "requireScopingTags": false
   }
 }
