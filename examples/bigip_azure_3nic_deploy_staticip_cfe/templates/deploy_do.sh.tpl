@@ -37,12 +37,39 @@ HTTP_CODE=$(curl -sku "$${BIGIP_USER}:$${BIGIP_PASS}" \
   "https://$${BIGIP_HOST}:$${BIGIP_PORT}/mgmt/shared/declarative-onboarding")
 
 echo "==> Response code: $${HTTP_CODE}"
-cat "$${TMPFILE}" | python3 -m json.tool 2>/dev/null || cat "$${TMPFILE}"
-rm -f "$${TMPFILE}"
 
-if [[ "$${HTTP_CODE}" =~ ^(200|202)$$ ]]; then
-  echo "==> DO declaration posted successfully to ${bigip_name}"
+if [ "$${HTTP_CODE}" = "200" ]; then
+  cat "$${TMPFILE}" | python3 -m json.tool 2>/dev/null || cat "$${TMPFILE}"
+  rm -f "$${TMPFILE}"
+  echo "==> DO declaration completed successfully on ${bigip_name}"
+elif [ "$${HTTP_CODE}" = "202" ]; then
+  echo "==> DO declaration accepted — processing asynchronously..."
+  TASK_URL=$(python3 -c "import json,sys; print(json.load(sys.stdin)['selfLink'])" < "$${TMPFILE}" 2>/dev/null | sed 's|https://localhost|https://'"$${BIGIP_HOST}"':'"$${BIGIP_PORT}"'|')
+  rm -f "$${TMPFILE}"
+  for i in $(seq 1 6); do
+    sleep 10
+    POLL_TMP=$(mktemp)
+    curl -sku "$${BIGIP_USER}:$${BIGIP_PASS}" -o "$${POLL_TMP}" "$${TASK_URL}" 2>/dev/null
+    TASK_STATUS=$(python3 -c "import json,sys; print(json.load(sys.stdin)['result']['status'])" < "$${POLL_TMP}" 2>/dev/null || echo "UNKNOWN")
+    TASK_CODE=$(python3 -c "import json,sys; print(json.load(sys.stdin)['result']['code'])" < "$${POLL_TMP}" 2>/dev/null || echo "0")
+    echo "    Poll $${i}/6 — status: $${TASK_STATUS} (code: $${TASK_CODE})"
+    if [ "$${TASK_STATUS}" != "RUNNING" ]; then
+      cat "$${POLL_TMP}" | python3 -m json.tool 2>/dev/null || cat "$${POLL_TMP}"
+      rm -f "$${POLL_TMP}"
+      if [ "$${TASK_CODE}" = "200" ]; then
+        echo "==> DO declaration completed successfully on ${bigip_name}"
+      else
+        echo "==> DO declaration finished with code $${TASK_CODE} on ${bigip_name}"
+      fi
+      exit 0
+    fi
+    rm -f "$${POLL_TMP}"
+  done
+  echo "==> DO still processing after 1 minute — check BIG-IP status manually"
+  echo "    Task URL: $${TASK_URL}"
 else
+  cat "$${TMPFILE}" | python3 -m json.tool 2>/dev/null || cat "$${TMPFILE}"
+  rm -f "$${TMPFILE}"
   echo "==> ERROR: DO declaration failed with HTTP $${HTTP_CODE}"
   exit 1
 fi
