@@ -141,8 +141,8 @@ locals {
   })
 
   cfe_declaration = templatefile("${path.module}/templates/cfe_declaration.tpl", {
-    storage_account_name = azurerm_storage_account.storage_account.name
-    failover_vip         = "10.9.46.6"
+    cfe_label    = var.cfe_label
+    failover_vip = "10.9.46.6"
   })
 }
 

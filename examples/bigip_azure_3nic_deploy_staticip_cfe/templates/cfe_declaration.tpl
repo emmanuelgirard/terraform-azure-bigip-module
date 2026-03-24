@@ -8,7 +8,9 @@
     "logLevel": "silly"
   },
   "externalStorage": {
-    "scopingName": "${storage_account_name}"
+    "scopingTags": {
+      "f5_cfe_label": "${cfe_label}"
+    }
   },
   "failoverAddresses": {
     "enabled": true,
