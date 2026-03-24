@@ -27,18 +27,18 @@ done
 
 # POST the DO declaration
 echo "==> Posting DO declaration..."
-RESPONSE=$(curl -sku "$${BIGIP_USER}:$${BIGIP_PASS}" \
+TMPFILE=$(mktemp)
+HTTP_CODE=$(curl -sku "$${BIGIP_USER}:$${BIGIP_PASS}" \
   -X POST \
   -H "Content-Type: application/json" \
   -d @"$${DO_FILE}" \
-  -w "\n%%{http_code}" \
+  -o "$${TMPFILE}" \
+  -w "%%{http_code}" \
   "https://$${BIGIP_HOST}:$${BIGIP_PORT}/mgmt/shared/declarative-onboarding")
 
-HTTP_CODE=$(echo "$${RESPONSE}" | tail -1)
-BODY=$(echo "$${RESPONSE}" | awk 'NR>1{print prev} {prev=$$0}')
-
 echo "==> Response code: $${HTTP_CODE}"
-echo "$${BODY}" | python3 -m json.tool 2>/dev/null || echo "$${BODY}"
+cat "$${TMPFILE}" | python3 -m json.tool 2>/dev/null || cat "$${TMPFILE}"
+rm -f "$${TMPFILE}"
 
 if [[ "$${HTTP_CODE}" =~ ^(200|202)$$ ]]; then
   echo "==> DO declaration posted successfully to ${bigip_name}"
