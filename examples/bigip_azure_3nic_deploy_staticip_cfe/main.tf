@@ -228,3 +228,59 @@ resource "local_file" "deploy_cfe_b" {
 
   depends_on = [module.bigip_b]
 }
+
+resource "local_file" "deploy_do_a_ps1" {
+  content = templatefile("${path.module}/templates/deploy_do.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    do_filename           = "DO_3nic-bigip-a.json"
+  })
+  filename = "${path.module}/deploy_do_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_do_b_ps1" {
+  content = templatefile("${path.module}/templates/deploy_do.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_b"
+    do_filename           = "DO_3nic-bigip-b.json"
+  })
+  filename = "${path.module}/deploy_do_b.ps1"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "deploy_cfe_a_ps1" {
+  content = templatefile("${path.module}/templates/deploy_cfe.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename = "${path.module}/deploy_cfe_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_cfe_b_ps1" {
+  content = templatefile("${path.module}/templates/deploy_cfe.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_b"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename = "${path.module}/deploy_cfe_b.ps1"
+
+  depends_on = [module.bigip_b]
+}
