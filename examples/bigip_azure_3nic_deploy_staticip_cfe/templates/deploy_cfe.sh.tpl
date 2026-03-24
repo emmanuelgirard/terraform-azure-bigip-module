@@ -40,7 +40,7 @@ echo "==> Response code: $${HTTP_CODE}"
 cat "$${TMPFILE}" | python3 -m json.tool 2>/dev/null || cat "$${TMPFILE}"
 rm -f "$${TMPFILE}"
 
-if [[ "$${HTTP_CODE}" =~ ^(200|202)$$ ]]; then
+if [ "$${HTTP_CODE}" = "200" ] || [ "$${HTTP_CODE}" = "202" ]; then
   echo "==> CFE declaration posted successfully to ${bigip_name}"
 else
   echo "==> ERROR: CFE declaration failed with HTTP $${HTTP_CODE}"
