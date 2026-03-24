@@ -188,3 +188,9 @@ bash /var/config/rest/downloads/f5-bigip-runtime-init.gz.run -- '--cloud azure'
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf.yaml
 sleep 5
 f5-bigip-runtime-init --config-file /config/cloud/runtime-init-conf-backup.yaml
+
+# Ensure Azure management routes exist (DHCP may not always inject them)
+MGMT_GW=$(tmsh list sys management-route default all-properties | grep gateway | awk '{print $2}')
+tmsh list sys management-route | grep -q 168.63.129.16 || tmsh create sys management-route azure_dns network 168.63.129.16/32 gateway $MGMT_GW
+tmsh list sys management-route | grep -q 169.254.169.254 || tmsh create sys management-route azure_metadata network 169.254.169.254/32 gateway $MGMT_GW
+tmsh save sys config
