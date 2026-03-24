@@ -305,6 +305,12 @@ variable "user_identity" {
   description = "The ID of the managed user identity to assign to the BIG-IP instance"
 }
 
+variable "create_user_identity" {
+  description = "Set to false to skip creation of the internal user-assigned managed identity. When false, an external identity must be provided via user_identity."
+  type        = bool
+  default     = true
+}
+
 variable "external_enable_ip_forwarding" {
   description = "Enable IP forwarding on the External interfaces. To allow inline routing for backends, this must be set to true"
   default     = true

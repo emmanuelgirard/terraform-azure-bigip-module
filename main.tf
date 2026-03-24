@@ -197,7 +197,7 @@ data "azurerm_client_config" "current" {
 }
 
 resource "azurerm_user_assigned_identity" "user_identity" {
-  count               = var.user_identity == null ? 1 : 0
+  count               = var.create_user_identity ? 1 : 0
   name                = format("%s-ident", local.instance_prefix)
   resource_group_name = data.azurerm_resource_group.bigiprg.name
   location            = data.azurerm_resource_group.bigiprg.location
@@ -229,7 +229,7 @@ resource "azurerm_key_vault_access_policy" "example" {
   count        = var.az_keyvault_authentication ? 1 : 0
   key_vault_id = data.azurerm_key_vault.keyvault[count.index].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.user_identity == null ? azurerm_user_assigned_identity.user_identity[0].principal_id : var.user_identity
+  object_id    = var.create_user_identity ? azurerm_user_assigned_identity.user_identity[0].principal_id : var.user_identity
 
   key_permissions = [
     "Get", "List", "Update", "Create", "Import", "Delete", "Recover", "Backup", "Restore",
@@ -499,7 +499,7 @@ resource "azurerm_linux_virtual_machine" "f5vm01" {
   )
   identity {
     type         = "UserAssigned"
-    identity_ids = var.user_identity == null ? flatten([azurerm_user_assigned_identity.user_identity.*.id]) : [var.user_identity]
+    identity_ids = var.create_user_identity ? flatten([azurerm_user_assigned_identity.user_identity.*.id]) : [var.user_identity]
   }
   depends_on = [azurerm_network_interface_security_group_association.mgmt_security, azurerm_network_interface_security_group_association.internal_security, azurerm_network_interface_security_group_association.external_security, azurerm_network_interface_security_group_association.external_public_security]
 }

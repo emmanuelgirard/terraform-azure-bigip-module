@@ -17,10 +17,6 @@ resource "azurerm_ssh_public_key" "f5_key" {
   public_key          = file("~/.ssh/id_rsa.pub")
 }
 
-# NOTE: On first deploy, create the identity first:
-#   terraform apply -target=azurerm_resource_group.rg -target=azurerm_user_assigned_identity.user_identity
-# Then set user_identity_id variable to the output value and run full apply.
-
 #
 # Create BIG-IP A (active) with static IPs and availability set
 #
@@ -39,7 +35,8 @@ module "bigip_a" {
   availability_zone           = null
   availabilityZones_public_ip = "No-Zone"
   availability_set_id         = azurerm_availability_set.avset.id
-  user_identity               = var.user_identity_id
+  create_user_identity        = false
+  user_identity               = azurerm_user_assigned_identity.user_identity.id
   DO_URL                      = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
   AS3_URL                     = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.56.0/f5-appsvcs-3.56.0-10.noarch.rpm"
   TS_URL                      = "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.41.0/f5-telemetry-1.41.0-1.noarch.rpm"
@@ -68,7 +65,8 @@ module "bigip_b" {
   availability_zone           = null
   availabilityZones_public_ip = "No-Zone"
   availability_set_id         = azurerm_availability_set.avset.id
-  user_identity               = var.user_identity_id
+  create_user_identity        = false
+  user_identity               = azurerm_user_assigned_identity.user_identity.id
   DO_URL                      = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
   AS3_URL                     = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.56.0/f5-appsvcs-3.56.0-10.noarch.rpm"
   TS_URL                      = "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.41.0/f5-telemetry-1.41.0-1.noarch.rpm"
