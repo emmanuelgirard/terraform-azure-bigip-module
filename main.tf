@@ -212,6 +212,7 @@ data "azurerm_client_config" "current" {
 }
 
 resource "azurerm_user_assigned_identity" "user_identity" {
+  count               = var.create_user_identity ? 1 : 0
   # count               = var.user_identity == null ? 1 : 0
   count = 0
   name                = format("%s-ident", local.instance_prefix)
@@ -245,7 +246,7 @@ resource "azurerm_key_vault_access_policy" "example" {
   count        = var.az_keyvault_authentication ? 1 : 0
   key_vault_id = data.azurerm_key_vault.keyvault[count.index].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = var.user_identity == null ? azurerm_user_assigned_identity.user_identity[0].principal_id : var.user_identity
+  object_id    = var.create_user_identity ? azurerm_user_assigned_identity.user_identity[0].principal_id : var.user_identity
 
   key_permissions = [
     "Get", "List", "Update", "Create", "Import", "Delete", "Recover", "Backup", "Restore",
@@ -313,10 +314,10 @@ resource "azurerm_public_ip" "secondary_external_public_ip" {
 
 # Deploy BIG-IP with N-Nic interface 
 resource "azurerm_network_interface" "mgmt_nic" {
-  count                = length(local.bigip_map["mgmt_subnet_ids"])
-  name                 = "${local.instance_prefix}-mgmt-nic-${count.index}"
-  location             = data.azurerm_resource_group.bigiprg.location
-  resource_group_name  = data.azurerm_resource_group.bigiprg.name
+  count                 = length(local.bigip_map["mgmt_subnet_ids"])
+  name                  = "${local.instance_prefix}-mgmt-nic-${count.index}"
+  location              = data.azurerm_resource_group.bigiprg.location
+  resource_group_name   = data.azurerm_resource_group.bigiprg.name
   ip_forwarding_enabled = var.mgmt_enable_ip_forwarding
   ip_configuration {
     name                          = "${local.instance_prefix}-mgmt-ip-${count.index}"
@@ -332,10 +333,10 @@ resource "azurerm_network_interface" "mgmt_nic" {
 }
 
 resource "azurerm_network_interface" "external_nic" {
-  count                = length(local.external_private_subnet_id)
-  name                 = "${local.instance_prefix}-ext-nic-${count.index}"
-  location             = data.azurerm_resource_group.bigiprg.location
-  resource_group_name  = data.azurerm_resource_group.bigiprg.name
+  count                 = length(local.external_private_subnet_id)
+  name                  = "${local.instance_prefix}-ext-nic-${count.index}"
+  location              = data.azurerm_resource_group.bigiprg.location
+  resource_group_name   = data.azurerm_resource_group.bigiprg.name
   ip_forwarding_enabled = var.external_enable_ip_forwarding
   ip_configuration {
     name                          = "${local.instance_prefix}-ext-ip-${count.index}"
@@ -358,10 +359,10 @@ resource "azurerm_network_interface" "external_nic" {
 }
 
 resource "azurerm_network_interface" "external_public_nic" {
-  count                = length(local.external_public_subnet_id)
-  name                 = "${local.instance_prefix}-ext-nic-public-${count.index}"
-  location             = data.azurerm_resource_group.bigiprg.location
-  resource_group_name  = data.azurerm_resource_group.bigiprg.name
+  count                 = length(local.external_public_subnet_id)
+  name                  = "${local.instance_prefix}-ext-nic-public-${count.index}"
+  location              = data.azurerm_resource_group.bigiprg.location
+  resource_group_name   = data.azurerm_resource_group.bigiprg.name
   ip_forwarding_enabled = var.external_enable_ip_forwarding
 
   ip_configuration {
@@ -507,7 +508,8 @@ resource "azurerm_linux_virtual_machine" "f5vm01" {
     product   = var.f5_product_name
     publisher = var.image_publisher
   }
-  zone = var.availability_zone
+  zone                = var.availability_set_id != null ? null : var.availability_zone
+  availability_set_id = var.availability_set_id
 
   tags = merge(local.tags, {
     Name = format("%s-f5vm01", local.instance_prefix)
@@ -515,7 +517,7 @@ resource "azurerm_linux_virtual_machine" "f5vm01" {
   )
   identity {
     type         = "UserAssigned"
-    identity_ids = var.user_identity == null ? flatten([azurerm_user_assigned_identity.user_identity.*.id]) : [var.user_identity]
+    identity_ids = var.create_user_identity ? flatten([azurerm_user_assigned_identity.user_identity.*.id]) : [var.user_identity]
   }
   depends_on = [azurerm_network_interface_security_group_association.mgmt_security, azurerm_network_interface_security_group_association.internal_security, azurerm_network_interface_security_group_association.external_security, azurerm_network_interface_security_group_association.external_public_security]
 }

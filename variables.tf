@@ -259,6 +259,12 @@ variable "availability_zone" {
   default     = 1
 }
 
+variable "availability_set_id" {
+  description = "The ID of the Availability Set in which the BIG-IP VM should be placed. When set, availability_zone must not be set (they are mutually exclusive in Azure)."
+  type        = string
+  default     = null
+}
+
 variable "availabilityZones_public_ip" {
   description = "The availability zone to allocate the Public IP in. Possible values are Zone-Redundant, 1, 2, 3, and No-Zone."
   type        = string
@@ -299,6 +305,12 @@ variable "user_identity" {
   type        = string
   default     = null
   description = "The ID of the managed user identity to assign to the BIG-IP instance"
+}
+
+variable "create_user_identity" {
+  description = "Set to false to skip creation of the internal user-assigned managed identity. When false, an external identity must be provided via user_identity."
+  type        = bool
+  default     = true
 }
 
 variable "external_enable_ip_forwarding" {
