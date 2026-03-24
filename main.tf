@@ -501,6 +501,10 @@ resource "azurerm_linux_virtual_machine" "f5vm01" {
     type         = "UserAssigned"
     identity_ids = var.create_user_identity ? flatten([azurerm_user_assigned_identity.user_identity.*.id]) : [var.user_identity]
   }
+  dynamic "boot_diagnostics" {
+    for_each = var.enable_boot_diagnostics ? [1] : []
+    content {}
+  }
   depends_on = [azurerm_network_interface_security_group_association.mgmt_security, azurerm_network_interface_security_group_association.internal_security, azurerm_network_interface_security_group_association.external_security, azurerm_network_interface_security_group_association.external_public_security]
 }
 
