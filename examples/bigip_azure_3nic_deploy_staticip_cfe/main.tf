@@ -96,6 +96,8 @@ locals {
     bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
     remote_host    = "10.9.47.5"
     local_host     = "10.9.47.4"
+    member_a       = "10.9.47.4"
+    member_b       = "10.9.47.5"
   })
 
   do_bigip_b = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
@@ -113,6 +115,8 @@ locals {
     bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
     remote_host    = "10.9.47.4"
     local_host     = "10.9.47.5"
+    member_a       = "10.9.47.4"
+    member_b       = "10.9.47.5"
   })
 }
 

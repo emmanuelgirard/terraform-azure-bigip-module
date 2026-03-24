@@ -84,7 +84,7 @@
     "failoverGroup": {
       "class": "DeviceGroup",
       "type": "sync-failover",
-      "members": ["${remote_host}", "${local_host}"],
+      "members": ["${member_a}", "${member_b}"],
       "owner": "/Common/failoverGroup/members/0",
       "autoSync": true,
       "saveOnAutoSync": false,
