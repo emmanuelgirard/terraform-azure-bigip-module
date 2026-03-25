@@ -11,6 +11,20 @@ variable "f5_password" {
   default     = ""
 }
 
+variable "license_key_a" {
+  description = "BIG-IP registration key for bigip-A. Leave empty for PAYG/hourly images."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "license_key_b" {
+  description = "BIG-IP registration key for bigip-B. Leave empty for PAYG/hourly images."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "location" {}
 
 variable "AllowedIPs" {}

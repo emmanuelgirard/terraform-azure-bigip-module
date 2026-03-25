@@ -265,6 +265,12 @@ variable "availability_set_id" {
   default     = null
 }
 
+variable "enable_boot_diagnostics" {
+  description = "Enable boot diagnostics on the BIG-IP VM. Uses an Azure-managed storage account when no URI is specified."
+  type        = bool
+  default     = false
+}
+
 variable "availabilityZones_public_ip" {
   description = "The availability zone to allocate the Public IP in. Possible values are Zone-Redundant, 1, 2, 3, and No-Zone."
   type        = string

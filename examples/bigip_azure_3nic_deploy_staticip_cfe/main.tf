@@ -52,6 +52,7 @@ module "bigip_a" {
   availability_zone           = null
   availabilityZones_public_ip = "No-Zone"
   availability_set_id         = azurerm_availability_set.avset.id
+  enable_boot_diagnostics     = true
   create_user_identity        = false
   user_identity               = azurerm_user_assigned_identity.user_identity.id
   DO_URL                      = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
@@ -84,6 +85,7 @@ module "bigip_b" {
   availability_zone           = null
   availabilityZones_public_ip = "No-Zone"
   availability_set_id         = azurerm_availability_set.avset.id
+  enable_boot_diagnostics     = true
   create_user_identity        = false
   user_identity               = azurerm_user_assigned_identity.user_identity.id
   DO_URL                      = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.47.0/f5-declarative-onboarding-1.47.0-14.noarch.rpm"
@@ -103,41 +105,45 @@ locals {
   internal_prefix_length = split("/", var.internal_subnet_prefix)[1]
 
   do_bigip_a = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
-    hostname       = module.bigip_a.mgmtPublicDNS
-    name_servers   = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
-    ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
-    vlan_name1     = "external-public-subnet"
-    self_ip1       = module.bigip_a.private_addresses["public_private"]["private_ip"][0]
-    self_ip1_mask  = local.external_prefix_length
-    vlan_name2     = "internal-subnet"
-    self_ip2       = module.bigip_a.private_addresses["internal_private"]["private_ip"][0]
-    self_ip2_mask  = local.internal_prefix_length
-    gateway        = cidrhost(var.external_subnet_prefix, 1)
-    bigip_username = module.bigip_a.f5_username
-    bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
-    remote_host    = "10.9.47.5"
-    local_host     = "10.9.47.4"
-    member_a       = "10.9.47.4"
-    member_b       = "10.9.47.5"
+    hostname        = module.bigip_a.mgmtPublicDNS
+    name_servers    = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
+    ntp_servers     = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    vlan_name1      = "external-public-subnet"
+    self_ip1        = module.bigip_a.private_addresses["public_private"]["private_ip"][0]
+    self_ip1_mask   = local.external_prefix_length
+    vlan_name2      = "internal-subnet"
+    self_ip2        = module.bigip_a.private_addresses["internal_private"]["private_ip"][0]
+    self_ip2_mask   = local.internal_prefix_length
+    gateway         = cidrhost(var.external_subnet_prefix, 1)
+    bigip_username  = module.bigip_a.f5_username
+    local_password  = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
+    remote_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
+    remote_host     = "10.9.47.5"
+    local_host      = "10.9.47.4"
+    regkey          = var.license_key_a
+    member_a        = "10.9.47.4"
+    member_b        = "10.9.47.5"
   })
 
   do_bigip_b = templatefile("${path.module}/templates/onboard_do_3nic_cfe.tpl", {
-    hostname       = module.bigip_b.mgmtPublicDNS
-    name_servers   = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
-    ntp_servers    = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
-    vlan_name1     = "external-public-subnet"
-    self_ip1       = module.bigip_b.private_addresses["public_private"]["private_ip"][0]
-    self_ip1_mask  = local.external_prefix_length
-    vlan_name2     = "internal-subnet"
-    self_ip2       = module.bigip_b.private_addresses["internal_private"]["private_ip"][0]
-    self_ip2_mask  = local.internal_prefix_length
-    gateway        = cidrhost(var.external_subnet_prefix, 1)
-    bigip_username = module.bigip_b.f5_username
-    bigip_password = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
-    remote_host    = "10.9.47.4"
-    local_host     = "10.9.47.5"
-    member_a       = "10.9.47.4"
-    member_b       = "10.9.47.5"
+    hostname        = module.bigip_b.mgmtPublicDNS
+    name_servers    = join(",", formatlist("\"%s\"", ["168.63.129.16"]))
+    ntp_servers     = join(",", formatlist("\"%s\"", ["169.254.169.123"]))
+    vlan_name1      = "external-public-subnet"
+    self_ip1        = module.bigip_b.private_addresses["public_private"]["private_ip"][0]
+    self_ip1_mask   = local.external_prefix_length
+    vlan_name2      = "internal-subnet"
+    self_ip2        = module.bigip_b.private_addresses["internal_private"]["private_ip"][0]
+    self_ip2_mask   = local.internal_prefix_length
+    gateway         = cidrhost(var.external_subnet_prefix, 1)
+    bigip_username  = module.bigip_b.f5_username
+    local_password  = var.f5_password != "" ? var.f5_password : module.bigip_b.bigip_password
+    remote_password = var.f5_password != "" ? var.f5_password : module.bigip_a.bigip_password
+    remote_host     = "10.9.47.4"
+    local_host      = "10.9.47.5"
+    regkey          = var.license_key_b
+    member_a        = "10.9.47.4"
+    member_b        = "10.9.47.5"
   })
 
   cfe_declaration = templatefile("${path.module}/templates/cfe_declaration.tpl", {
@@ -146,35 +152,247 @@ locals {
   })
 }
 
-resource "null_resource" "clusterDO_a" {
-  provisioner "local-exec" {
-    command = "cat > DO_3nic-bigip-a.json <<EOL\n ${local.do_bigip_a}\nEOL"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf DO_3nic-bigip-a.json"
-  }
+resource "local_file" "do_bigip_a" {
+  content  = local.do_bigip_a
+  filename = "${path.module}/DO_3nic-bigip-a.json"
+
   depends_on = [module.bigip_a]
 }
 
-resource "null_resource" "clusterDO_b" {
-  provisioner "local-exec" {
-    command = "cat > DO_3nic-bigip-b.json <<EOL\n ${local.do_bigip_b}\nEOL"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf DO_3nic-bigip-b.json"
-  }
+resource "local_file" "do_bigip_b" {
+  content  = local.do_bigip_b
+  filename = "${path.module}/DO_3nic-bigip-b.json"
+
   depends_on = [module.bigip_b]
 }
 
-resource "null_resource" "cfe_declaration" {
-  provisioner "local-exec" {
-    command = "cat > cfe_declaration.json <<EOL\n ${local.cfe_declaration}\nEOL"
-  }
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf cfe_declaration.json"
-  }
+resource "local_file" "cfe_declaration" {
+  content  = local.cfe_declaration
+  filename = "${path.module}/cfe_declaration.json"
+
   depends_on = [module.bigip_a, module.bigip_b]
+}
+
+resource "local_file" "deploy_do_a" {
+  content = templatefile("${path.module}/templates/deploy_do.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    do_filename           = "DO_3nic-bigip-a.json"
+  })
+  filename        = "${path.module}/deploy_do_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_do_b" {
+  content = templatefile("${path.module}/templates/deploy_do.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_b"
+    do_filename           = "DO_3nic-bigip-b.json"
+  })
+  filename        = "${path.module}/deploy_do_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "deploy_cfe_a" {
+  content = templatefile("${path.module}/templates/deploy_cfe.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename        = "${path.module}/deploy_cfe_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_cfe_b" {
+  content = templatefile("${path.module}/templates/deploy_cfe.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename        = "${path.module}/deploy_cfe_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "deploy_do_a_ps1" {
+  content = templatefile("${path.module}/templates/deploy_do.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    do_filename           = "DO_3nic-bigip-a.json"
+  })
+  filename = "${path.module}/deploy_do_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_do_b_ps1" {
+  content = templatefile("${path.module}/templates/deploy_do.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_b"
+    do_filename           = "DO_3nic-bigip-b.json"
+  })
+  filename = "${path.module}/deploy_do_b.ps1"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "deploy_cfe_a_ps1" {
+  content = templatefile("${path.module}/templates/deploy_cfe.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename = "${path.module}/deploy_cfe_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "deploy_cfe_b_ps1" {
+  content = templatefile("${path.module}/templates/deploy_cfe.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+    cfe_filename          = "cfe_declaration.json"
+  })
+  filename = "${path.module}/deploy_cfe_b.ps1"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "failover_a" {
+  content = templatefile("${path.module}/templates/failover.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename        = "${path.module}/failover_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "failover_b" {
+  content = templatefile("${path.module}/templates/failover.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename        = "${path.module}/failover_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "failover_a_ps1" {
+  content = templatefile("${path.module}/templates/failover.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename = "${path.module}/failover_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "failover_b_ps1" {
+  content = templatefile("${path.module}/templates/failover.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename = "${path.module}/failover_b.ps1"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "fix_mgmt_routes_a" {
+  content = templatefile("${path.module}/templates/fix_mgmt_routes.sh.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename        = "${path.module}/fix_mgmt_routes_a.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "fix_mgmt_routes_b" {
+  content = templatefile("${path.module}/templates/fix_mgmt_routes.sh.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename        = "${path.module}/fix_mgmt_routes_b.sh"
+  file_permission = "0755"
+
+  depends_on = [module.bigip_b]
+}
+
+resource "local_file" "fix_mgmt_routes_a_ps1" {
+  content = templatefile("${path.module}/templates/fix_mgmt_routes.ps1.tpl", {
+    bigip_name            = "bigip-A"
+    bigip_mgmt_ip         = module.bigip_a.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_a.mgmtPort
+    bigip_username        = module.bigip_a.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename = "${path.module}/fix_mgmt_routes_a.ps1"
+
+  depends_on = [module.bigip_a]
+}
+
+resource "local_file" "fix_mgmt_routes_b_ps1" {
+  content = templatefile("${path.module}/templates/fix_mgmt_routes.ps1.tpl", {
+    bigip_name            = "bigip-B"
+    bigip_mgmt_ip         = module.bigip_b.mgmtPublicIP
+    bigip_mgmt_port       = module.bigip_b.mgmtPort
+    bigip_username        = module.bigip_b.f5_username
+    bigip_password_output = "bigip_password_a"
+  })
+  filename = "${path.module}/fix_mgmt_routes_b.ps1"
+
+  depends_on = [module.bigip_b]
 }
