@@ -110,7 +110,8 @@ variable "image_publisher" {
 
 variable "f5_image_name" {
   type        = string
-  default     = "f5-bigip-virtual-edition-25m-better-hourly"
+  # default     = "f5-bigip-virtual-edition-25m-better-hourly"
+  default     = "f5-bigip-virtual-edition-1g-better-hourly"
   description = <<-EOD
 After finding the image to use with the Azure CLI with a variant of the following;
 
@@ -129,7 +130,8 @@ EOD
 }
 variable "f5_version" {
   type        = string
-  default     = "latest"
+  # default     = "latest"
+  default       = "17.5.104000"
   description = <<-EOD
 After finding the image to use with the Azure CLI with a variant of the following;
 
