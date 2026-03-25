@@ -17,7 +17,7 @@ echo "==> Fixing management routes on ${bigip_name} at $${BIGIP_HOST}:$${BIGIP_P
 # 2. Create azure_dns route (168.63.129.16/32) if missing
 # 3. Create azure_metadata route (169.254.169.254/32) if missing
 # 4. Save config
-CMD="MGMT_GW=\$(tmsh list sys management-route default all-properties | grep gateway | awk '{print \$2}'); tmsh list sys management-route | grep -q 168.63.129.16 || tmsh create sys management-route azure_dns network 168.63.129.16/32 gateway \$MGMT_GW; tmsh list sys management-route | grep -q 169.254.169.254 || tmsh create sys management-route azure_metadata network 169.254.169.254/32 gateway \$MGMT_GW; tmsh save sys config"
+CMD="MGMT_GW=\$(tmsh list sys management-route default all-properties | grep -oE '[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+'); tmsh list sys management-route | grep -q 168.63.129.16 || tmsh create sys management-route azure_dns network 168.63.129.16/32 gateway \$MGMT_GW; tmsh list sys management-route | grep -q 169.254.169.254 || tmsh create sys management-route azure_metadata network 169.254.169.254/32 gateway \$MGMT_GW; tmsh save sys config"
 
 TMPFILE=$(mktemp)
 HTTP_CODE=$(curl -sku "$${BIGIP_USER}:$${BIGIP_PASS}" \
